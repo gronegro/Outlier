@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.node {
+	stroke: #fff;
+	stroke-width: 1.5px;
+}
+
+.link {
+	stroke: #999;
+	stroke-opacity: .6;
+}
+
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+var     width = 4000,
+		height = 2000;
+
+var color = d3.scale.category20();
+
+var margin = {top: 10, right: 10, bottom: 10, left: 10};
+
+var force = d3.layout.force() 
+		.charge(-200)
+		.linkDistance(70)
+		.size([width + margin.left + margin.right, height + margin.top + margin.bottom]);
+
+var zoom = d3.behavior.zoom()
+		.scaleExtent([1, 10])
+		.on("zoom", zoomed);
+
+var drag = d3.behavior.drag()
+		.origin(function(d) { return d; })
+		.on("dragstart", dragstarted)
+		.on("drag", dragged)
+		.on("dragend", dragended);
+
+var svg = d3.select("body").append("svg")
+		.attr("width", width + margin.left + margin.right)
+		.attr("height", height + margin.top + margin.bottom)
+		.append("g")
+		.attr("transform", "translate(" + margin.left + "," + margin.right + ")")
+		.call(zoom);
+
+var container = svg.append("g");
+
+
+d3.json("CANADA.json", function(error, graph) {
+	if (error) throw error;
+
+	force
+			.nodes(graph.nodes)
+			.links(graph.links)
+			.start();
+
+	var link = svg.selectAll(".link")
+			.data(graph.links)
+		.enter().append("line")
+			.attr("class", "link")
+			.style("stroke-width", function(d) { return Math.sqrt(d.value); });
+
+
+	var node = svg.selectAll(".node")
+      .data(graph.nodes)
+    .enter().append("g")
+      .attr("class", "node")
+      .call(force.drag);
+
+
+	node.append("title")
+			.text(function(d) { return d.name; });
+
+
+	node.append("image")
+      .attr("class", "circle")
+      .filter(function(d) { return d.name == "WBIFS 1" })
+      .attr("xlink:href", "WBIFS.jpg")
+      .attr("x", "-40px")
+      .attr("y", "-40px")
+      .attr("width", "100px")
+      .attr("height", "100px");
+
+
+  node.append("image")
+      .attr("class", "circle")
+      .filter(function(d) { return d.name == "WBIFS -1" })
+      .attr("xlink:href", "WBIFS.jpg")
+      .attr("x", "-40px")
+      .attr("y", "-40px")
+      .attr("width", "100px")
+      .attr("height", "100px");
+
+
+
+  node.append("image")
+      .attr("class", "circle")
+      .filter(function(d) { return d.name == "SuperStocks 1" })
+      .attr("xlink:href", "SuperStocks.jpg")
+      .attr("x", "-40px")
+      .attr("y", "-40px")
+      .attr("width", "100px")
+      .attr("height", "100px");
+
+
+  node.append("image")
+      .attr("class", "circle")
+      .filter(function(d) { return d.name == "SuperStocks -1" })
+      .attr("xlink:href", "SuperStocks.jpg")
+      .attr("x", "-40px")
+      .attr("y", "-40px")
+      .attr("width", "100px")
+      .attr("height", "100px");
+
+
+
+  node.append("circle")
+      .attr("class", "node")
+      .filter(function(d) { return d.name != "WBIFS 1" & d.name != "WBIFS -1" & d.name != "SuperStocks 1" & d.name != "SuperStocks -1"})
+      .attr("r", 5)
+      .style("fill", function(d) { return color(d.group); })
+
+
+	force.on("tick", function() {
+		link.attr("x1", function(d) { return d.source.x; })
+				.attr("y1", function(d) { return d.source.y; })
+				.attr("x2", function(d) { return d.target.x; })
+				.attr("y2", function(d) { return d.target.y; });
+
+		node.attr("cx", function(d) { return d.x; })
+				.attr("cy", function(d) { return d.y; });
+
+		node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+	});
+});
+
+
+function zoomed() {
+	container.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+}
+
+function dragstarted(d) {
+
+	d3.event.sourceEvent.stopPropagation();
+
+	d3.select(this).classed("dragging", true);
+	force.start();
+
+}
+
+function dragged(d) {
+
+	d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
+
+}
+
+function dragended(d) {
+
+	d3.select(this).classed("dragging", false);
+
+}
+
+
+</script>
